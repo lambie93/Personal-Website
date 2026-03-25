@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>laurengracebroadbent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+    </nav>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="calendar.html">Calendar</a></li>
+  </ul>
+  <!-- Timer Section -->
+  <section id="timer-app" class="timer-app">
+    <h2>Work / Break Timer</h2>
+    <div class="timer-controls">
+      <label>Work (minutes): <input type="number" id="work-min" min="1" value="25"></label>
+      <label>Break (minutes): <input type="number" id="break-min" min="1" value="5"></label>
+      <label>Cycles: <input type="number" id="cycles" min="1" value="4"></label>
+    </div>
+    <div class="timer-display">
+      <div id="time">00:00</div>
+      <div id="cycle">Cycle 0 / 0</div>
+    </div>
+    <div class="timer-buttons">
+      <button id="start">Start</button>
+      <button id="pause">Pause</button>
+      <button id="reset">Reset</button>
+      <button id="skip">Skip</button>
+    </div>
+  </section>
+  <div class="month">
+  <ul>
+    <li class="prev">&#10094;</li>
+    <li class="next">&#10095;</li>
+    <li>August<br><span style="font-size:18px">2021</span></li>
+  </ul>
+</div>
+
+<ul class="weekdays">
+  <li>Monday</li>
+  <li>Tuesday</li>
+  <li>Wednesday</li>
+  <li>Thursday</li>
+  <li>Friday</li>
+  <li>Saturday</li>
+  <li>Sunday</li>
+</ul>
+  <script>
+    (function(){
+      const workIn = document.getElementById('work-min');
+      const breakIn = document.getElementById('break-min');
+      const cyclesIn = document.getElementById('cycles');
+      const modeEl = document.getElementById('mode');
+      const timeEl = document.getElementById('time');
+      const cycleEl = document.getElementById('cycle');
+      const startBtn = document.getElementById('start');
+      const pauseBtn = document.getElementById('pause');
+      const resetBtn = document.getElementById('reset');
+      const skipBtn = document.getElementById('skip');
+
+      let timerId = null;
+      let remaining = 0;
+      let mode = 'ready'; // 'work' | 'break' | 'ready' | 'done'
+      let totalCycles = 0;
+      let finishedCycles = 0;
+
+      function formatTime(s){
+        const m = Math.floor(s/60).toString().padStart(2,'0');
+        const sec = (s%60).toString().padStart(2,'0');
+        return `${m}:${sec}`;
+      }
+
+      function updateDisplay(){
+        timeEl.textContent = formatTime(remaining);
+        modeEl.textContent = mode === 'work' ? 'Work' : mode === 'break' ? 'Break' : mode === 'done' ? 'Done' : 'Ready';
+        cycleEl.textContent = `Cycle ${finishedCycles} / ${totalCycles}`;
+        document.getElementById('timer-app').dataset.mode = mode;
+      }
+
+      function tick(){
+        if(remaining > 0){
+          remaining -= 1;
+          updateDisplay();
+          return;
+        }
+        // period ended
+        if(mode === 'work'){
+          // switch to break
+          mode = 'break';
+          remaining = Math.max(1, parseInt(breakIn.value,10) || 5) * 60;
+          updateDisplay();
+          alert('Work period finished. Break started.');
+        } else if(mode === 'break'){
+          finishedCycles += 1;
+          if(finishedCycles >= totalCycles){
+            mode = 'done';
+            clearInterval(timerId);
+            timerId = null;
+            updateDisplay();
+            alert('All cycles complete. Well done!');
+            return;
+          }
+          mode = 'work';
+          remaining = Math.max(1, parseInt(workIn.value,10) || 25) * 60;
+          updateDisplay();
+          alert('Break finished. Work started.');
+        }
+      }
+
+      function start(){
+        if(mode === 'ready' || mode === 'done'){
+          finishedCycles = 0;
+          totalCycles = Math.max(1, parseInt(cyclesIn.value,10) || 1);
+          mode = 'work';
+          remaining = Math.max(1, parseInt(workIn.value,10) || 25) * 60;
+        }
+        if(timerId) return; // already running
+        timerId = setInterval(tick, 1000);
+        updateDisplay();
+      }
+
+      function pause(){
+        if(timerId){
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+
+      function reset(){
+        pause();
+        mode = 'ready';
+        remaining = 0;
+        finishedCycles = 0;
+        totalCycles = Math.max(1, parseInt(cyclesIn.value,10) || 1);
+        updateDisplay();
+      }
+
+      function skip(){
+        // end current period immediately
+        remaining = 0;
+        tick();
+      }
+
+      startBtn.addEventListener('click', start);
+      pauseBtn.addEventListener('click', pause);
+      resetBtn.addEventListener('click', reset);
+      skipBtn.addEventListener('click', skip);
+
+      // initialize display
+      totalCycles = Math.max(1, parseInt(cyclesIn.value,10) || 1);
+      updateDisplay();
+    })();
+  </script>
+
+<ul class="days">
+  <li>1</li>
+  <li>2</li>
+  <li>3</li>
+  <li>4</li>
+  <li>5</li>
+  <li>6</li>
+  <li>7</li>
+  <li>8</li>
+  <li>9</li>
+  <li><span class="active">10</span></li>
+  <li>11</li>
+  ...etc
+</ul>
+</body>
+</html>
